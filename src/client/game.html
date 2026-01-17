@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="game/game.css" />
+  <title>Suhdokuh - Sudoku on Reddit</title>
+</head>
+
+<body class="app">
+  <div class="container">
+    <h1>🧩 Suhdokuh</h1>
+
+    <!-- Game Mode Selector -->
+    <div class="mode-selector">
+      <label for="mode-select">Game Mode:</label>
+      <select id="mode-select">
+        <option value="4x4">4×4 (Mini)</option>
+        <option value="9x9">9×9 (Classic)</option>
+      </select>
+    </div>
+
+    <p class="instructions" id="instructions">Click a cell, then use number buttons or keyboard (1-4) to fill</p>
+
+    <div id="grid" class="grid"></div>
+    <div id="message" class="message"></div>
+
+    <!-- Timer display -->
+    <div class="timer-display">
+      <span id="timer">0:00</span>
+    </div>
+
+    <div id="numbers" class="numbers"></div>
+
+    <button id="reset-btn" class="reset-btn">↻ New Puzzle</button>
+
+    <!-- Leaderboard Section -->
+    <div class="leaderboard-container">
+      <h2>🏆 Leaderboard</h2>
+      <div id="leaderboard" class="leaderboard">
+        <p class="loading">Loading leaderboard...</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      Developed by u/syazyyy
+    </footer>
+  </div>
+
+  <script type="module" src="game/game.ts"></script>
+</body>
+
+</html>
