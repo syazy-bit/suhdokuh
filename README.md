@@ -1,4 +1,4 @@
-## 🧩 Sudoku Web Game - 4×4 & 9×9
+## 🧩 Sudoku Web Game - 4×4 & 9×9 (For REDDIT GAMES)
 
 A full-featured interactive Sudoku puzzle game with dual game modes (4×4 and 9×9) built for Reddit Devvit's web game framework. Features API-driven puzzle generation, real-time validation, leaderboard tracking, and a clean, responsive UI with type-safe TypeScript implementation.
 
@@ -401,3 +401,4 @@ u/syazyyy
 **Built with ❤️ for Reddit Devvit**
 
 Developed with full TypeScript type safety, comprehensive validation, leaderboard integration, and multi-mode support for an engaging Sudoku experience.
+![version](https://img.shields.io/badge/version-v0.0.12-blue)
