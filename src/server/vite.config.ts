@@ -3,7 +3,7 @@ import { builtinModules } from "node:module";
 import { loadEnv } from "vite";
 import { resolve } from "path";
 
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ mode }) => {
   // Load environment variables from project root
   const rootDir = resolve(__dirname, "../../");
   const env = loadEnv(mode, rootDir, "");
