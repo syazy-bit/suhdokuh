@@ -19,6 +19,7 @@ import {
   redis,
 } from "@devvit/web/server";
 import { createPost } from "./core/post";
+import { SudokuGenerator, GridSize } from "./core/SudokuGenerator";
 
 const app = express();
 
@@ -359,38 +360,6 @@ const fallbackPuzzles9x9 = [
   },
 ];
 
-async function fetchPuzzleFromNinjas(
-  width: number,
-  height: number,
-): Promise<{
-  puzzle: string;
-  solution: string;
-}> {
-  console.log(
-    `[SERVER] Generating puzzle locally (width=${width}, height=${height})`,
-  );
-
-  // Devvit's sandboxed environment blocks external HTTP requests
-  // Use local puzzle library instead
-  throw new Error("Using local puzzle library (Devvit blocks external APIs)");
-}
-
-function parseNinjasPuzzle(puzzleString: string, size: number): number[][] {
-  const grid: number[][] = [];
-  let index = 0;
-
-  for (let r = 0; r < size; r++) {
-    const row: number[] = [];
-    for (let c = 0; c < size; c++) {
-      const char = puzzleString[index] || "0";
-      row.push(char === "." || char === " " ? 0 : parseInt(char, 10));
-      index++;
-    }
-    grid.push(row);
-  }
-
-  return grid;
-}
 
 router.post<{ postId: string }, PuzzleResponse, PuzzleRequest>(
   "/api/puzzle",
@@ -423,61 +392,50 @@ router.post<{ postId: string }, PuzzleResponse, PuzzleRequest>(
         return;
       }
 
-      // For 4x4, use fallback (no API supports 4x4 sudoku)
-      if (mode === "4x4") {
-        console.log("[SERVER] Using fallback for 4x4 mode");
-        const fallback =
-          fallbackPuzzles4x4[
-            Math.floor(Math.random() * fallbackPuzzles4x4.length)
-          ];
-        if (!fallback) {
-          res.status(500).json({
-            type: "puzzle" as const,
-            status: "error" as const,
-            puzzle: [],
-            solution: [],
-            message: "No puzzles available",
-          });
-          return;
-        }
-        res.json({
-          type: "puzzle",
-          status: "success",
-          puzzle: fallback.puzzle,
-          solution: fallback.solution,
-        });
-        return;
-      }
+      // Convert mode to grid size
+      const size: GridSize = mode === "4x4" ? 4 : 9;
+      const boxSize = Math.sqrt(size);
 
-      // For 9x9, fetch from API Ninjas with fallback
       try {
-        console.log("[SERVER] Attempting to fetch from API Ninjas...");
-        const { puzzle: puzzleStr, solution: solutionStr } =
-          await fetchPuzzleFromNinjas(3, 3);
-        console.log("[SERVER] API Ninjas call succeeded!");
-
-        const puzzle = parseNinjasPuzzle(puzzleStr, 9);
-        const solution = parseNinjasPuzzle(solutionStr, 9);
+        // Use unified generator for both sizes
+        console.log(`[SERVER] Generating ${mode} puzzle with unified generator...`);
+        const startTime = Date.now();
+        
+        const generator = new SudokuGenerator({ size, boxSize });
+        const generated = generator.generate();
+        
+        const elapsed = Date.now() - startTime;
+        console.log(
+          `[SERVER] Generated ${mode} puzzle in ${elapsed}ms (${generated.cellsRemoved} cells removed)`
+        );
 
         res.json({
           type: "puzzle",
           status: "success",
-          puzzle,
-          solution,
+          puzzle: generated.puzzle,
+          solution: generated.solution,
+          message: `Generated ${mode} puzzle`,
         });
-      } catch (apiError) {
-        console.warn(
-          "[SERVER] Using local puzzle library (Devvit blocks external APIs)",
+      } catch (generatorError) {
+        // Fallback to static puzzles if generation fails
+        console.error(
+          `[SERVER] Generator failed for ${mode}, using fallback:`,
+          generatorError
         );
+
         const fallback =
-          fallbackPuzzles9x9[
-            Math.floor(Math.random() * fallbackPuzzles9x9.length)
-          ];
+          mode === "4x4"
+            ? fallbackPuzzles4x4[
+                Math.floor(Math.random() * fallbackPuzzles4x4.length)
+              ]
+            : fallbackPuzzles9x9[
+                Math.floor(Math.random() * fallbackPuzzles9x9.length)
+              ];
 
         if (!fallback) {
           res.status(500).json({
-            type: "puzzle" as const,
-            status: "error" as const,
+            type: "puzzle",
+            status: "error",
             puzzle: [],
             solution: [],
             message: "No puzzles available",
@@ -490,11 +448,11 @@ router.post<{ postId: string }, PuzzleResponse, PuzzleRequest>(
           status: "success",
           puzzle: fallback.puzzle,
           solution: fallback.solution,
-          message: "Using local puzzle library",
+          message: "Using fallback puzzle",
         });
       }
     } catch (error) {
-      console.error(`[SERVER] Error generating puzzle: ${error}`);
+      console.error(`[SERVER] Error in puzzle endpoint: ${error}`);
       res.status(500).json({
         type: "puzzle",
         status: "error",
